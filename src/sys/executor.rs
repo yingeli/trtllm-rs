@@ -56,6 +56,12 @@ mod ffi {
         #[cxx_name = "setStreaming"]
         fn set_streaming(self: Pin<&mut Request>, streaming: bool) -> Result<()>;
 
+        #[cxx_name = "setEndId"]
+        fn set_end_id(self: Pin<&mut Request>, end_id: i32) -> Result<()>;
+
+        #[cxx_name = "setPadId"]
+        fn set_pad_id(self: Pin<&mut Request>, pad_id: i32) -> Result<()>;
+
         // type Result;
         type Response;
 
@@ -159,6 +165,20 @@ impl Request {
             .pin_mut()
             .set_streaming(streaming)
             .map_err(|e| anyhow!("Failed to set streaming: {}", e))
+    }
+
+    pub fn set_end_id(&mut self, end_id: u32) -> anyhow::Result<()> {
+        self.ptr
+            .pin_mut()
+            .set_end_id(end_id as i32)
+            .map_err(|e| anyhow!("Failed to set end id: {}", e))
+    }
+
+    pub fn set_pad_id(&mut self, pad_id: u32) -> anyhow::Result<()> {
+        self.ptr
+            .pin_mut()
+            .set_pad_id(pad_id as i32)
+            .map_err(|e| anyhow!("Failed to set pad id: {}", e))
     }
 
     fn as_ptr(&self) -> &ffi::Request {
