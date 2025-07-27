@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use std::ops::Deref;
 use std::path::Path;
 
 use cxx::UniquePtr;
@@ -49,13 +50,19 @@ mod ffi {
 
         type ModelType;
         type ExecutorConfig;
+
         type Request;
+
+        #[cxx_name = "setStreaming"]
+        fn set_streaming(self: Pin<&mut Request>, streaming: bool) -> Result<()>;
+
         // type Result;
         type Response;
-        type Executor;
 
         //#[cxx_name = "getResult"]
         //pub fn get_result(self: &Response) -> &Result;
+
+        type Executor;
 
         #[cxx_name = "enqueueRequest"]
         fn enqueue_request(self: Pin<&mut Executor>, request: &Request) -> Result<u64>;
@@ -96,9 +103,11 @@ impl From<VecTokens> for Vec<u32> {
     }
 }
 
-impl VecTokens {
-    pub fn value(&self) -> &[u32] {
-        self.v.as_slice()
+impl Deref for VecTokens {
+    type Target = Vec<u32>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.v
     }
 }
 
@@ -141,6 +150,13 @@ impl Request {
     pub fn new(input_token_ids: &[u32], max_tokens: u32) -> Self {
         let ptr = ffi::request(input_token_ids, max_tokens);
         Request { ptr }
+    }
+
+    pub fn set_streaming(&mut self, streaming: bool) -> anyhow::Result<()> {
+        self.ptr
+            .pin_mut()
+            .set_streaming(streaming)
+            .map_err(|e| anyhow!("Failed to set streaming: {}", e))
     }
 
     fn as_ptr(&self) -> &ffi::Request {
