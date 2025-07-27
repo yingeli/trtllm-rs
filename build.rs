@@ -10,6 +10,7 @@ fn main() {
     println!("cargo:rustc-link-lib=tensorrt_llm");
 
     cxx_build::bridges(["src/sys/executor.rs", "src/sys/plugins/api.rs"])
+        .file("src/sys/executor.cpp")
         .include("/app/tensorrt_llm/include")
         .std("c++20")
         .cuda(true)

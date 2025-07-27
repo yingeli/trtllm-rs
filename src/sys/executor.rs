@@ -3,7 +3,7 @@ use std::path::Path;
 
 use cxx::UniquePtr;
 
-pub use self::ffi::{ModelType, Response, Result};
+pub use self::ffi::{ModelType, Response, Result, VecTokens};
 
 #[cxx::bridge]
 mod ffi {
@@ -21,37 +21,41 @@ mod ffi {
         EncoderDecoder,
     }
 
+    #[derive(PartialEq, Clone)]
     struct VecTokens {
         v: Vec<u32>,
     }
 
+    struct Result {
+        is_final: bool,
+
+        output_token_ids: Vec<VecTokens>,
+    }
+
+    /*
     #[namespace = "tensorrt_llm::executor"]
     struct Result {
         #[cxx_name = "isFinal"]
         is_final: bool,
 
         #[cxx_name = "outputTokenIds"]
-        output_token_ids: Vec<VecTokens>,
+        output_token_ids: Vec<Vec<u32>>,
     }
+    */
 
     #[namespace = "tensorrt_llm::executor"]
     unsafe extern "C++" {
         include!("tensorrt_llm/executor/executor.h");
 
         type ModelType;
-
         type ExecutorConfig;
-
         type Request;
-
-        type Result;
-
+        // type Result;
         type Response;
-
-        #[cxx_name = "getResult"]
-        pub fn get_result(self: &Response) -> &Result;
-
         type Executor;
+
+        //#[cxx_name = "getResult"]
+        //pub fn get_result(self: &Response) -> &Result;
 
         #[cxx_name = "enqueueRequest"]
         fn enqueue_request(self: Pin<&mut Executor>, request: &Request) -> Result<u64>;
@@ -61,6 +65,12 @@ mod ffi {
         include!("trtllm/src/sys/executor.h");
 
         fn executor_config() -> UniquePtr<ExecutorConfig>;
+
+        fn executor(
+            model_path: &str,
+            model_type: ModelType,
+            executor_config: &ExecutorConfig,
+        ) -> Result<UniquePtr<Executor>>;
 
         fn request(input_token_ids: &[u32], max_tokens: u32) -> UniquePtr<Request>;
 
@@ -76,11 +86,35 @@ mod ffi {
 
         fn get_num_responses_ready(executor: &Executor, request_id: u64) -> Result<u32>;
 
-        fn executor(
-            model_path: &str,
-            model_type: ModelType,
-            executor_config: &ExecutorConfig,
-        ) -> Result<UniquePtr<Executor>>;
+        fn get_result(response: &Response) -> Result<Result>;
+    }
+}
+
+impl From<VecTokens> for Vec<u32> {
+    fn from(value: VecTokens) -> Self {
+        value.v
+    }
+}
+
+impl VecTokens {
+    pub fn value(&self) -> &[u32] {
+        self.v.as_slice()
+    }
+}
+
+impl Response {
+    pub fn get_result(&self) -> anyhow::Result<Result> {
+        ffi::get_result(self).map_err(|e| anyhow!("Failed to get result from response: {}", e))
+    }
+}
+
+impl Result {
+    pub fn is_final(&self) -> bool {
+        self.is_final
+    }
+
+    pub fn output_token_ids(&self) -> &[VecTokens] {
+        self.output_token_ids.as_slice()
     }
 }
 

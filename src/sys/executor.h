@@ -8,6 +8,8 @@
 
 namespace tle = tensorrt_llm::executor;
 
+struct Result;
+
 inline std::unique_ptr<tle::ExecutorConfig> executor_config(
 ) {
     return std::make_unique<tle::ExecutorConfig>(
@@ -62,3 +64,5 @@ inline uint32_t get_num_responses_ready(
 ) {
     return executor.getNumResponsesReady(request_id);
 }
+
+Result get_result(const tle::Response& response);
