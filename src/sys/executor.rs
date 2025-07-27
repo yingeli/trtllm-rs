@@ -86,10 +86,12 @@ mod ffi {
             request_id: u64,
         ) -> Result<UniquePtr<CxxVector<Response>>>;
 
+        /*
         fn await_response(
             executor: Pin<&mut Executor>,
             request_id: u64,
         ) -> Result<UniquePtr<Response>>;
+         */
 
         fn get_num_responses_ready(executor: &Executor, request_id: u64) -> Result<u32>;
 

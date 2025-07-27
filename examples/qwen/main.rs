@@ -1,5 +1,4 @@
 use anyhow::{Result, anyhow};
-use std::fs::File;
 use trtllm::{
     executor::{Executor, ExecutorConfig, ModelType, Request},
     init_trtllm_plugins,
@@ -17,7 +16,7 @@ fn main() -> Result<()> {
         &config,
     )?;
 
-    let mut request = Request::new(&[1, 2, 3, 4], 100); // Example token IDs and max tokens
+    let mut request = Request::new(&[1, 2, 3, 4], 1000); // Example token IDs and max tokens
     request.set_streaming(true)?;
 
     let request_id = executor.enqueue_request(&request)?;
@@ -36,7 +35,7 @@ fn main() -> Result<()> {
         for response in responses {
             let result = response.get_result()?;
             for token_ids in result.output_token_ids() {
-                println!("Response Token IDs: {:?}", token_ids.as_slice());
+                println!("Result Token IDs: {:?}", token_ids.as_slice());
             }
             if result.is_final() {
                 is_final = true;

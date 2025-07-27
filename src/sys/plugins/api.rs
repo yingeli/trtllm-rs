@@ -1,7 +1,5 @@
 use anyhow::{Result, anyhow};
 
-use cxx::UniquePtr;
-
 #[cxx::bridge]
 mod ffi {
     extern "C++" {

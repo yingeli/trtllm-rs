@@ -48,6 +48,7 @@ inline std::unique_ptr<std::vector<tle::Response>> await_responses(
     );
 }
 
+/*
 inline std::unique_ptr<tle::Response> await_response(
     tle::Executor& executor,
     const std::uint64_t request_id
@@ -57,6 +58,7 @@ inline std::unique_ptr<tle::Response> await_response(
         responses[0]
     );
 }
+*/
 
 inline uint32_t get_num_responses_ready(
     const tle::Executor& executor,
