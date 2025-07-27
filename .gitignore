@@ -22,6 +22,8 @@ target
 
 **/model.cache
 
+**/__pycache__
+
 examples/qwen/models
 examples/qwen/checkpoints
 examples/qwen/engines
