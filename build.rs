@@ -9,13 +9,11 @@ fn main() {
     println!("cargo:rustc-link-lib=nvinfer_plugin_tensorrt_llm");
     println!("cargo:rustc-link-lib=tensorrt_llm");
 
-    cxx_build::bridges([
-        "src/sys/executor.rs",
-    ])
-    .include("/app/tensorrt_llm/include")
-    .std("c++20")
-    .cuda(true)
-    .static_crt(cfg!(target_os = "windows"))
-    .flag_if_supported("/EHsc")
-    .compile("trtllm");
+    cxx_build::bridges(["src/sys/executor.rs", "src/sys/plugins/api.rs"])
+        .include("/app/tensorrt_llm/include")
+        .std("c++20")
+        .cuda(true)
+        .static_crt(cfg!(target_os = "windows"))
+        .flag_if_supported("/EHsc")
+        .compile("trtllm");
 }

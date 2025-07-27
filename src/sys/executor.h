@@ -37,6 +37,15 @@ inline std::unique_ptr<tle::Executor> executor(
     );
 }
 
+inline std::unique_ptr<std::vector<tle::Response>> await_responses(
+    tle::Executor& executor,
+    const std::uint64_t request_id
+) {
+    return std::make_unique<std::vector<tle::Response>>(
+        executor.awaitResponses(request_id)
+    );
+}
+
 inline std::unique_ptr<tle::Response> await_response(
     tle::Executor& executor,
     const std::uint64_t request_id
