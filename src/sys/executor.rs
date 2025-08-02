@@ -180,36 +180,6 @@ impl Tensor {
     }
 }
 
-impl From<VecTokens> for Vec<u32> {
-    fn from(value: VecTokens) -> Self {
-        value.v
-    }
-}
-
-impl Deref for VecTokens {
-    type Target = Vec<u32>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.v
-    }
-}
-
-impl Response {
-    pub fn get_result(&self) -> anyhow::Result<Result> {
-        ffi::get_result(self).map_err(|e| anyhow!("Failed to get result from response: {}", e))
-    }
-}
-
-impl Result {
-    pub fn is_final(&self) -> bool {
-        self.is_final
-    }
-
-    pub fn output_token_ids(&self) -> &[VecTokens] {
-        self.output_token_ids.as_slice()
-    }
-}
-
 pub struct ExecutorConfig {
     ptr: UniquePtr<ffi::ExecutorConfig>,
 }
@@ -251,9 +221,11 @@ impl Request {
             .set_pad_id(pad_id as i32)
             .map_err(|e| anyhow!("Failed to set pad id: {}", e))
     }
+}
 
-    fn as_ptr(&self) -> &ffi::Request {
-        &self.ptr
+impl Response {
+    pub fn get_result(&self) -> anyhow::Result<Result> {
+        ffi::get_result(self).map_err(|e| anyhow!("Failed to get result from response: {}", e))
     }
 }
 
@@ -283,6 +255,30 @@ impl<'a> Iterator for ResponseIterator<'a> {
     }
 }
 
+impl From<VecTokens> for Vec<u32> {
+    fn from(value: VecTokens) -> Self {
+        value.v
+    }
+}
+
+impl Deref for VecTokens {
+    type Target = Vec<u32>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.v
+    }
+}
+
+impl Result {
+    pub fn is_final(&self) -> bool {
+        self.is_final
+    }
+
+    pub fn output_token_ids(&self) -> &[VecTokens] {
+        self.output_token_ids.as_slice()
+    }
+}
+
 pub struct Executor {
     ptr: UniquePtr<ffi::Executor>,
 }
@@ -304,7 +300,7 @@ impl Executor {
     pub fn enqueue_request(&mut self, request: &Request) -> anyhow::Result<u64> {
         self.ptr
             .pin_mut()
-            .enqueue_request(request.as_ptr())
+            .enqueue_request(&request.ptr)
             .map_err(|e| anyhow!("Failed to enqueue request: {}", e))
     }
 
@@ -317,12 +313,8 @@ impl Executor {
     }
 
     pub fn get_num_responses_ready(&self, request_id: u64) -> anyhow::Result<usize> {
-        let num = ffi::get_num_responses_ready(self.as_ptr(), request_id)
+        let num = ffi::get_num_responses_ready(&self.ptr, request_id)
             .map_err(|e| anyhow!("Failed to get number of responses ready: {}", e))?;
         Ok(num as usize)
-    }
-
-    fn as_ptr(&self) -> &ffi::Executor {
-        &self.ptr
     }
 }
