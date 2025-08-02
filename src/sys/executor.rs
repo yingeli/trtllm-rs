@@ -172,7 +172,7 @@ pub struct Tensor {
 }
 
 impl Tensor {
-    pub fn create<T>(data_type: DataType, data: &[T], shape: Shape) -> anyhow::Result<Self> {
+    pub fn of<T>(data_type: DataType, data: &[T], shape: Shape) -> anyhow::Result<Self> {
         let data = data.as_ptr() as *mut ffi::TensorData;
         let ptr = unsafe { ffi::tensor(data_type, data, shape.ptr) }
             .map_err(|e| anyhow!("Failed to create tensor: {}", e))?;
