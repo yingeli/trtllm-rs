@@ -39,6 +39,13 @@ inline std::unique_ptr<tle::Request> request(
     );
 }
 
+inline void set_encoder_input_features(
+    tle::Request& request,
+    std::unique_ptr<tle::Tensor> features
+) {
+    request.setEncoderInputFeatures(*features);
+}
+
 inline std::unique_ptr<tle::Executor> executor(
     const rust::Str model_path,
     const tle::ModelType model_type,

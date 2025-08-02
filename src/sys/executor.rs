@@ -114,6 +114,9 @@ mod ffi {
         #[cxx_name = "setPadId"]
         fn set_pad_id(self: Pin<&mut Request>, pad_id: i32) -> Result<()>;
 
+        //#[cxx_name = "setEncoderInputFeatures"]
+        //fn set_encoder_input_features(self: Pin<&mut Request>, features: UniquePtr<Tensor>) -> Result<()>;
+
         type Response;
 
         type Executor;
@@ -144,6 +147,11 @@ mod ffi {
         ) -> Result<UniquePtr<Executor>>;
 
         fn request(input_token_ids: &[u32], max_tokens: u32) -> UniquePtr<Request>;
+
+        fn set_encoder_input_features(
+            request: Pin<&mut Request>,
+            features: UniquePtr<Tensor>,
+        ) -> Result<()>;
 
         fn await_responses(
             executor: Pin<&mut Executor>,
@@ -220,6 +228,11 @@ impl Request {
             .pin_mut()
             .set_pad_id(pad_id as i32)
             .map_err(|e| anyhow!("Failed to set pad id: {}", e))
+    }
+
+    pub fn set_encoder_input_features(&mut self, features: Tensor) -> anyhow::Result<()> {
+        ffi::set_encoder_input_features(self.ptr.pin_mut(), features.ptr)
+            .map_err(|e| anyhow!("Failed to set encoder input features: {}", e))
     }
 }
 
