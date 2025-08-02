@@ -316,14 +316,6 @@ impl Executor {
         Ok(ResponseIterator::new(responses))
     }
 
-    /*
-    pub fn await_response(&mut self, request_id: u64) -> Result<UniquePtr<Response>> {
-        let response = ffi::await_response(self.ptr.pin_mut(), request_id)
-            .map_err(|e| anyhow!("Failed to await response: {}", e))?;
-        Ok(response)
-    }
-    */
-
     pub fn get_num_responses_ready(&self, request_id: u64) -> anyhow::Result<usize> {
         let num = ffi::get_num_responses_ready(self.as_ptr(), request_id)
             .map_err(|e| anyhow!("Failed to get number of responses ready: {}", e))?;
