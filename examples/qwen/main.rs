@@ -49,7 +49,7 @@ fn main() -> Result<()> {
             for token_ids in result.output_token_ids() {
                 // println!("Result Token IDs: {:?}", token_ids.as_slice());
                 let output = tokenizer
-                    .decode(token_ids.as_slice(), false)
+                    .decode(token_ids, false)
                     .map_err(|e| anyhow!("Failed to decode token IDs: {}", e))?;
                 println!("Output: {}", output);
             }
