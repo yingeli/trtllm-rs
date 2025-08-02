@@ -8,7 +8,20 @@
 
 namespace tle = tensorrt_llm::executor;
 
-struct Result;
+inline std::unique_ptr<tle::Shape> shape(const rust::Slice<const std::uint64_t> dims) {
+    std::vector<tle::detail::DimType64> shape_dims(dims.begin(), dims.end());
+    return std::make_unique<tle::Shape>(
+        tle::Shape(shape_dims.data(), shape_dims.size())
+    );
+}
+
+struct TensorData;
+
+std::unique_ptr<tle::Tensor> tensor(
+    tle::DataType data_type,
+    TensorData* data,
+    std::unique_ptr<tle::Shape> shape
+);
 
 inline std::unique_ptr<tle::ExecutorConfig> executor_config(
 ) {
@@ -48,17 +61,7 @@ inline std::unique_ptr<std::vector<tle::Response>> await_responses(
     );
 }
 
-/*
-inline std::unique_ptr<tle::Response> await_response(
-    tle::Executor& executor,
-    const std::uint64_t request_id
-) {
-    auto responses = executor.awaitResponses(request_id);
-    return std::make_unique<tle::Response>(
-        responses[0]
-    );
-}
-*/
+struct Result;
 
 inline uint32_t get_num_responses_ready(
     const tle::Executor& executor,

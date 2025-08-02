@@ -1,5 +1,15 @@
 #include "trtllm/src/sys/executor.rs.h"
 
+std::unique_ptr<tle::Tensor> tensor(
+    tle::DataType data_type,
+    TensorData* data,
+    std::unique_ptr<tle::Shape> shape
+) {
+    return std::make_unique<tle::Tensor>(
+        tle::Tensor::of(data_type, data, *shape)
+    );
+}
+
 Result get_result(
     const tle::Response& response
 ) {

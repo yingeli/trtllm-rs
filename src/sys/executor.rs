@@ -4,10 +4,45 @@ use std::path::Path;
 
 use cxx::UniquePtr;
 
-pub use self::ffi::{ModelType, Response, Result, VecTokens};
+pub use self::ffi::{DataType, ModelType, Response, Result, VecTokens};
 
 #[cxx::bridge]
 mod ffi {
+    #[namespace = "tensorrt_llm::executor"]
+    #[derive(Copy, Clone, Debug)]
+    #[repr(i32)]
+    enum DataType {
+        #[cxx_name = "kBOOL"]
+        Bool,
+
+        #[cxx_name = "kUINT8"]
+        UInt8,
+
+        #[cxx_name = "kINT8"]
+        Int8,
+
+        #[cxx_name = "kINT32"]
+        Int32,
+
+        #[cxx_name = "kINT64"]
+        Int64,
+
+        #[cxx_name = "kBF16"]
+        BF16,
+
+        #[cxx_name = "kFP8"]
+        FP8,
+
+        #[cxx_name = "kFP16"]
+        FP16,
+
+        #[cxx_name = "kFP32"]
+        FP32,
+
+        #[cxx_name = "kUNKNOWN"]
+        Unknown,
+    }
+
     #[namespace = "tensorrt_llm::executor"]
     #[derive(Copy, Clone, Debug)]
     #[repr(i32)]
@@ -45,10 +80,27 @@ mod ffi {
     */
 
     #[namespace = "tensorrt_llm::executor"]
+    extern "C++" {
+        include!("tensorrt_llm/executor/types.h");
+
+        type DataType;
+    }
+
+    #[namespace = "tensorrt_llm::executor"]
+    extern "C++" {
+        include!("tensorrt_llm/executor/tensor.h");
+
+        type Shape;
+
+        type Tensor;
+    }
+
+    #[namespace = "tensorrt_llm::executor"]
     unsafe extern "C++" {
         include!("tensorrt_llm/executor/executor.h");
 
         type ModelType;
+
         type ExecutorConfig;
 
         type Request;
@@ -62,11 +114,7 @@ mod ffi {
         #[cxx_name = "setPadId"]
         fn set_pad_id(self: Pin<&mut Request>, pad_id: i32) -> Result<()>;
 
-        // type Result;
         type Response;
-
-        //#[cxx_name = "getResult"]
-        //pub fn get_result(self: &Response) -> &Result;
 
         type Executor;
 
@@ -76,6 +124,16 @@ mod ffi {
 
     unsafe extern "C++" {
         include!("trtllm/src/sys/executor.h");
+
+        fn shape(dims: &[usize]) -> UniquePtr<Shape>;
+
+        type TensorData;
+
+        unsafe fn tensor(
+            data_type: DataType,
+            data: *mut TensorData,
+            shape: UniquePtr<Shape>,
+        ) -> Result<UniquePtr<Tensor>>;
 
         fn executor_config() -> UniquePtr<ExecutorConfig>;
 
@@ -92,16 +150,33 @@ mod ffi {
             request_id: u64,
         ) -> Result<UniquePtr<CxxVector<Response>>>;
 
-        /*
-        fn await_response(
-            executor: Pin<&mut Executor>,
-            request_id: u64,
-        ) -> Result<UniquePtr<Response>>;
-         */
-
         fn get_num_responses_ready(executor: &Executor, request_id: u64) -> Result<u32>;
 
         fn get_result(response: &Response) -> Result<Result>;
+    }
+}
+
+pub struct Shape {
+    ptr: UniquePtr<ffi::Shape>,
+}
+
+impl Shape {
+    pub fn new(dims: &[usize]) -> Self {
+        let ptr = ffi::shape(dims);
+        Shape { ptr }
+    }
+}
+
+pub struct Tensor {
+    ptr: UniquePtr<ffi::Tensor>,
+}
+
+impl Tensor {
+    pub fn create<T>(data_type: DataType, data: &[T], shape: Shape) -> anyhow::Result<Self> {
+        let data = data.as_ptr() as *mut ffi::TensorData;
+        let ptr = unsafe { ffi::tensor(data_type, data, shape.ptr) }
+            .map_err(|e| anyhow!("Failed to create tensor: {}", e))?;
+        Ok(Tensor { ptr })
     }
 }
 
@@ -143,10 +218,6 @@ impl ExecutorConfig {
     pub fn new() -> Self {
         let ptr = ffi::executor_config();
         ExecutorConfig { ptr }
-    }
-
-    fn as_ptr(&self) -> &ffi::ExecutorConfig {
-        &self.ptr
     }
 }
 
@@ -226,7 +297,7 @@ impl Executor {
         let path = model_path
             .to_str()
             .ok_or_else(|| anyhow!("Invalid model path: {}", model_path.display()))?;
-        let ptr = ffi::executor(path, model_type, config.as_ptr())?;
+        let ptr = ffi::executor(path, model_type, &config.ptr)?;
         Ok(Executor { ptr })
     }
 
