@@ -16,7 +16,7 @@ mod ffi {
         Bool,
 
         #[cxx_name = "kUINT8"]
-        UInt8,
+        Uint8,
 
         #[cxx_name = "kINT8"]
         Int8,
@@ -28,16 +28,16 @@ mod ffi {
         Int64,
 
         #[cxx_name = "kBF16"]
-        BF16,
+        Bf16,
 
         #[cxx_name = "kFP8"]
-        FP8,
+        Fp8,
 
         #[cxx_name = "kFP16"]
-        FP16,
+        Fp16,
 
         #[cxx_name = "kFP32"]
-        FP32,
+        Fp32,
 
         #[cxx_name = "kUNKNOWN"]
         Unknown,
