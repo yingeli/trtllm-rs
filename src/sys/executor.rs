@@ -101,6 +101,14 @@ mod ffi {
 
         type ModelType;
 
+        type LogitsPostProcessorConfig;
+
+        #[cxx_name = "setProcessorMap"]
+        fn set_processor_map(
+            self: Pin<&mut LogitsPostProcessorConfig>, 
+            processorMap: bool
+        ) -> Result<()>;        
+
         type ExecutorConfig;
 
         type Request;
